@@ -44,4 +44,22 @@ private:
     static bool isPidExisting(string pid);
 };
 
-// TODO: Define all of the above functions below:
+
+/********************************************************************/
+/*
+Implementation of getCmd functtion
+Arguments: Process PID
+Return: String of the Cmd used to start the process
+ */
+
+string ProcessParser::getCmd(string pid)
+{ 
+    string path = "/proc/" + pid + "/cmdline";
+    ifstream cmdline(path);
+     if (cmdline)
+    {
+    string cmd;
+    getline(cmdline, cmd);   
+    }
+    return cmd;
+}
