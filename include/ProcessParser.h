@@ -196,6 +196,36 @@ Return: SysUpTime as an integer
     while(s>>read)
     stat.push_back(read);
     return to_string(float(stof(stat[13])/sysconf(_SC_CLK_TCK)));
-
-
  }
+ /******************************************************************* */
+ /*
+ Implementation of getProcUser function
+ Argumnets: Process Pid as a string
+ Return: process user as a string
+ */
+string ProcessParser::getProcUser(string pid)
+{
+    string line;
+    string name = "Uid:";
+    string result ="";
+    string param;
+    ifstream stream = Util::getStream((Path::basePath() + pid + Path::statusPath()));
+    while (std::getline(stream,line))
+    {
+       if (line.compare(0, name.size(),name) == 0)
+       {
+         stringstream s(line);
+         s>>param>>result;
+         break;
+       }
+    }
+     stream = Util::getStream("/etc/passwd");
+      name =("x:" + result);
+      while (std::getline(stream, line)) {
+        if (line.find(name) != std::string::npos) {
+            result = line.substr(0, line.find(":"));
+            return result;
+        }
+    }
+    return "";
+}
