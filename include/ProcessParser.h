@@ -56,6 +56,7 @@ string ProcessParser::getCmd(string pid)
 { 
     string path = Path::basePath() + pid + Path::cmdPath();
    // open the cmdline file 
+    ifstream cmdline;
     cmdline = Util::getStream(path);
     string cmd;
     // get the process cmd and return it
@@ -98,5 +99,31 @@ vector<string> ProcessParser::getPidList()
     // check if the dir is closed save and return the vector of PIDS
       if(closedir(dir))
         throw std::runtime_error(std::strerror(errno));
-    return container;
+    return PIDs;
+}
+/****************************************************** */
+/*
+Implement getVmSize function
+Arguments: process Pid
+Return: Virtual memory used bt rhe process
+ */
+std::string ProcessParser::getVmSize(string pid)
+{
+  string path = Path::basePath() + pid + Path::statusPath();
+  string param = "VmData"
+  ifstream status =Util::getStream(path);
+  string line;
+  string value;
+  string VmKb;
+  while (std::getline(status,line))
+  {
+    if (line.compare(0,param.size(),param) == 0)
+    {
+      stringstream s(line);
+      s>>value>>VmKb;
+      break;
+    } 
+    
+  }
+  
 }
