@@ -105,25 +105,77 @@ vector<string> ProcessParser::getPidList()
 /*
 Implement getVmSize function
 Arguments: process Pid
-Return: Virtual memory used bt rhe process
+Return: Virtual memory in GB used by rhe process
  */
 std::string ProcessParser::getVmSize(string pid)
 {
   string path = Path::basePath() + pid + Path::statusPath();
-  string param = "VmData"
+  string param = "VmData";
   ifstream status =Util::getStream(path);
   string line;
   string value;
   string VmKb;
+  //loop on all the lines in the file
   while (std::getline(status,line))
   {
+    //check if this line contain the required parameter
     if (line.compare(0,param.size(),param) == 0)
     {
       stringstream s(line);
+      //set the parameter name in value and the Vm used in VmKb
       s>>value>>VmKb;
       break;
     } 
     
   }
-  
+  // convert the Vm used from KB to GB and return it as string 
+   return to_string((stof(VmKb)/float(1024*1024)));
 }
+/************************************************************************ */
+/*
+Implementation of getCpuPercent function
+Arguments: Process Pid
+Return: CPU usage % as a string
+ */
+
+std::string ProcessParser::getCpuPercent(string pid)
+{
+  string path = Path::basePath() + pid + "/" + Path::statPath;
+  ifstream pstat =Util::getStream(path);
+  string line;
+  vector<string> values;
+  float res;
+  string read;
+  std::getline(stream,line);
+  stringstream s(line);
+  while (s>>read)
+    values.push_back(read);
+  float utime = stof(ProcessParser::getProcUpTime(pid));
+    float stime = stof(values[14]);
+    float cutime = stof(values[15]);
+    float cstime = stof(values[16]);
+    float starttime = stof(values[21]);
+    float uptime = ProcessParser::getSysUpTime();
+    float freq = sysconf(_SC_CLK_TCK);
+    float total_time = utime + stime + cutime + cstime;
+    float seconds = uptime - (starttime/freq);
+    result = 100.0*((total_time/freq)/seconds);
+    return to_string(result);
+}
+/***************************************************************** */
+/*
+Implementation of getSysUpTime function
+Arguments: None
+Return: SysUpTime as an integer
+ */
+ long int ProcessParser::getSysUpTime()
+ {
+  string path = Path::basePath() + Path::upTimePath();
+  ifstream stream =Util::getStream(path);
+  string line;
+  getline(stream,line);
+  stringstream s(line);
+  string sysuptime;
+  s>>sysuptime;
+  return stoi(sysuptime);
+ }
