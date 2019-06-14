@@ -179,3 +179,23 @@ Return: SysUpTime as an integer
   s>>sysuptime;
   return stoi(sysuptime);
  }
+ /************************************************************ */
+ /*
+ Implementaion of getProcUpTime function
+ Argumnets: process Pid
+ Return: Process running tima as a string
+  */
+ string ProcessParser::getProcUpTime(string pid)
+ {
+    string line;
+    string read;
+    vector<string> stat;
+    ifstream stream = Util::getStream((Path::basePath() + pid + "/" +  Path::statPath()));
+    getline(stream, line);
+    stringstream s(line);
+    while(s>>read)
+    stat.push_back(read);
+    return to_string(float(stof(stat[13])/sysconf(_SC_CLK_TCK)));
+
+
+ }
