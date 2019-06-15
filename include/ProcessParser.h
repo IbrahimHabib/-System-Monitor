@@ -145,11 +145,7 @@ std::string ProcessParser::getCpuPercent(string pid)
   string line;
   vector<string> values;
   float res;
-  string read;
-  std::getline(stream,line);
-  stringstream s(line);
-  while (s>>read)
-    values.push_back(read);
+  values = Util::DataVector(pstat,line);
   float utime = stof(ProcessParser::getProcUpTime(pid));
     float stime = stof(values[14]);
     float cutime = stof(values[15]);
@@ -188,13 +184,9 @@ Return: SysUpTime as an integer
  string ProcessParser::getProcUpTime(string pid)
  {
     string line;
-    string read;
     vector<string> stat;
     ifstream stream = Util::getStream((Path::basePath() + pid + "/" +  Path::statPath()));
-    getline(stream, line);
-    stringstream s(line);
-    while(s>>read)
-    stat.push_back(read);
+    stat = Util::DataVector(stream,line);
     return to_string(float(stof(stat[13])/sysconf(_SC_CLK_TCK)));
  }
  /******************************************************************* */
@@ -280,4 +272,47 @@ float get_sys_idle_cpu_time(vector<string>values)
 {
     return (stof(values[S_IDLE]) + stof(values[S_IOWAIT]));
 }
+/*************************************************** */
+/*
+Implementaion of getSysRamPercent function
+Arguments: None
+Return: RAM usage % as a float
+ */
+float ProcessParser::getSysRamPercent()
+{
+    string line;
+    string name1 = "MemAvailable:";
+    string name2 = "MemFree:";
+    string name3 = "Buffers:";
 
+    string value;
+    int result;
+    ifstream stream = Util::getStream((Path::basePath() + Path::memInfoPath()));
+    string param;
+    string value;
+    float total_mem = 0;
+    float free_mem = 0;
+    float buffers = 0;
+    while (std::getline(stream, line)) {
+        if (total_mem != 0 && free_mem != 0)
+            break;
+        if (line.compare(0, name1.size(), name1) == 0) 
+        {
+            stringstream s(line);
+            s>>param>>value;
+            total_mem = stof(value);
+        }
+        if (line.compare(0, name2.size(), name2) == 0) {
+            stringstream s(line);
+            s>>param>>value;
+            free_mem = stof(value);
+        }
+        if (line.compare(0, name3.size(), name3) == 0) {
+             stringstream s(line);
+            s>>param>>value;
+            buffers = stof(value);
+        }
+    }
+    //calculating usage:
+    return float(100.0*(1-(free_mem/(total_mem-buffers))));
+}
