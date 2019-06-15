@@ -1,5 +1,7 @@
 #include <string>
 #include <fstream>
+#include<vector>
+#include <sstream>
 
 // Classic helper function
 class Util {
@@ -9,6 +11,7 @@ public:
 static std::string convertToTime ( long int input_seconds );
 static std::string getProgressBar(std::string percent);
 static std::ifstream getStream(std::string path);
+static std::vector<std::string> DataVector(std::ifstream stream , std::string line);
 };
 
 std::string Util::convertToTime (long int input_seconds){
@@ -53,4 +56,14 @@ std::ifstream Util::getStream(std::string path){
         throw std::runtime_error("Non - existing PID");
     }
     return stream;
+}
+// wrapper for collecting file data in a vector
+std::vector<std::string> Util::DataVector(std::ifstream stream , std::string line)
+{
+  std::vector<std::string> values;
+  std::getline(stream,line);
+  std::stringstream s(line);
+  while (s>>read)
+    values.push_back(read);
+  return values;
 }
