@@ -359,3 +359,75 @@ string ProcessParser::getOsName()
     return "";
 
 }
+/****************************************************************** */
+/*
+Implementation of getTotalThreads
+Arguments: None
+Return: total number of processes threads as integer
+ */
+int ProcessParser::getTotalThreads()
+{
+    string line;
+    int result = 0;
+    string name = "Threads:";
+    string value;
+    vector<string>_list = ProcessParser::getPidList();
+    for (int i=0 ; i<_list.size();i++) {
+    string pid = _list[i];
+    //getting every process and reading their number of their threads
+    ifstream stream = Util::getStream((Path::basePath() + pid + Path::statusPath()));
+    while (std::getline(stream, line)) {
+        if (line.compare(0, name.size(), name) == 0) {
+            stringstream s(line);
+            s>>value>>value;
+            result += stoi(value);
+            break;
+        }
+    }
+    return result;
+}
+/***************************************************************** */
+/*
+Implementation of getTotalNumberOfProcesses function
+Arguments: None
+Return: Total numner of processes as integer
+ */
+int ProcessParser::getTotalNumberOfProcesses()
+{
+    string line;
+    int result = 0;
+    string name = "processes";
+    string value;
+    ifstream stream = Util::getStream((Path::basePath() + Path::statPath()));
+    while (std::getline(stream, line)) {
+        if (line.compare(0, name.size(), name) == 0) {
+            stringstream s(line);
+            s>>value>>value;
+            result += stoi(value);
+            break;
+        }
+    }
+    return result;
+}
+/******************************************************************* */
+/*
+Implementation of getNumberOfRunningProcesses function
+Arguments: None
+Return: Total numner o running processes as integer
+ */
+int ProcessParser::getNumberOfRunningProcesses()
+{
+    string line;
+    int result = 0;
+    string name = "procs_running";
+    ifstream stream = Util::getStream((Path::basePath() + Path::statPath()));
+    while (std::getline(stream, line)) {
+        if (line.compare(0, name.size(), name) == 0) {
+            stringstream s(line);
+            s>>value>>value;
+            result += stoi(value);
+            break;
+        }
+    }
+    return result;
+}
