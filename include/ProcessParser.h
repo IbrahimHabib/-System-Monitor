@@ -284,9 +284,6 @@ float ProcessParser::getSysRamPercent()
     string name1 = "MemAvailable:";
     string name2 = "MemFree:";
     string name3 = "Buffers:";
-
-    string value;
-    int result;
     ifstream stream = Util::getStream((Path::basePath() + Path::memInfoPath()));
     string param;
     string value;
@@ -315,4 +312,50 @@ float ProcessParser::getSysRamPercent()
     }
     //calculating usage:
     return float(100.0*(1-(free_mem/(total_mem-buffers))));
+}
+/************************************************************** */
+/*
+Implementation of getSysKernelVersion function
+Arguments: None
+Return: Kernel version as a string
+ */
+string ProcessParser::getSysKernelVersion()
+{
+    string line;
+    string name = "Linux version ";
+    ifstream stream = Util::getStream((Path::basePath() + Path::versionPath()));
+    string value;
+    while (std::getline(stream, line)) {
+        if (line.compare(0, name.size(),name) == 0) {
+          string stream s(line);
+          s>>value>>value>>value;
+          return value;
+        }
+    }
+    return "";
+}
+/******************************************************************* */
+/*
+Implementation of getOsName function
+Argumnets: None
+Return: OS name as string
+ */
+string ProcessParser::getOsName()
+{
+    string line;
+    string name = "PRETTY_NAME=";
+
+    ifstream stream = Util::getStream(("/etc/os-release"));
+
+    while (std::getline(stream, line)) {
+        if (line.compare(0, name.size(), name) == 0) {
+              std::size_t found = line.find("=");
+              found++;
+              string result = line.substr(found);
+              result.erase(std::remove(result.begin(), result.end(), '"'), result.end());
+              return result;
+        }
+    }
+    return "";
+
 }
