@@ -11,7 +11,6 @@ public:
 static std::string convertToTime ( long int input_seconds );
 static std::string getProgressBar(std::string percent);
 static std::ifstream getStream(std::string path);
-static std::vector<std::string> DataVector(std::ifstream stream , std::string line);
 };
 
 std::string Util::convertToTime (long int input_seconds){
@@ -34,6 +33,7 @@ std::string Util::getProgressBar(std::string percent){
         boundaries = (stof(percent)/100)*_size;
     } catch (...){
     boundaries = 0;
+   
     }
 
     for(int i=0;i<_size;i++){
@@ -50,20 +50,12 @@ std::string Util::getProgressBar(std::string percent){
 }
 
 // wrapper for creating streams
-std::ifstream Util::getStream(std::string path){
+std::ifstream Util::getStream(std::string path)
+{
     std::ifstream stream(path);
     if  (!stream) {
         throw std::runtime_error("Non - existing PID");
     }
     return stream;
 }
-// wrapper for collecting file data in a vector
-std::vector<std::string> Util::DataVector(std::ifstream stream , std::string line)
-{
-  std::vector<std::string> values;
-  std::getline(stream,line);
-  std::stringstream s(line);
-  while (s>>read)
-    values.push_back(read);
-  return values;
-}
+

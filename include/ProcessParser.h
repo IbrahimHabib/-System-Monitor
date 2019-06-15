@@ -21,7 +21,8 @@
 
 using namespace std;
 
-class ProcessParser{
+class ProcessParser
+{
 private:
     std::ifstream stream;
     public:
@@ -76,8 +77,8 @@ vector<string> ProcessParser::getPidList()
    vector<string> PIDs;
    bool isps = true;
    //check if the dir exists
-   if (!(dir = opendir(Path::basePath)))
-   throw std::runtime_error(std::strerror(errno));
+   if(!(dir = opendir("/proc")))
+        throw std::runtime_error(std::strerror(errno));
     //loop on the items in the dir
    while (ent = readdir(dir))
    {
@@ -114,7 +115,7 @@ std::string ProcessParser::getVmSize(string pid)
   ifstream status =Util::getStream(path);
   string line;
   string value;
-  string VmKb;
+  string VmKb = "0";
   //loop on all the lines in the file
   while (std::getline(status,line))
   {
@@ -129,6 +130,7 @@ std::string ProcessParser::getVmSize(string pid)
     
   }
   // convert the Vm used from KB to GB and return it as string 
+  
    return to_string((stof(VmKb)/float(1024*1024)));
 }
 /************************************************************************ */
@@ -140,12 +142,16 @@ Return: CPU usage % as a string
 
 std::string ProcessParser::getCpuPercent(string pid)
 {
-  string path = Path::basePath() + pid + "/" + Path::statPath;
+  string path = Path::basePath() + pid + "/" + Path::statPath();
   ifstream pstat =Util::getStream(path);
   string line;
   vector<string> values;
   float res;
-  values = Util::DataVector(pstat,line);
+  std::string read;
+  std::getline(pstat,line);
+  std::stringstream s(line);
+  while (s>>read)
+    values.push_back(read);
   float utime = stof(ProcessParser::getProcUpTime(pid));
     float stime = stof(values[14]);
     float cutime = stof(values[15]);
@@ -155,7 +161,7 @@ std::string ProcessParser::getCpuPercent(string pid)
     float freq = sysconf(_SC_CLK_TCK);
     float total_time = utime + stime + cutime + cstime;
     float seconds = uptime - (starttime/freq);
-    result = 100.0*((total_time/freq)/seconds);
+    float result = 100.0*((total_time/freq)/seconds);
     return to_string(result);
 }
 /***************************************************************** */
@@ -186,7 +192,11 @@ Return: SysUpTime as an integer
     string line;
     vector<string> stat;
     ifstream stream = Util::getStream((Path::basePath() + pid + "/" +  Path::statPath()));
-    stat = Util::DataVector(stream,line);
+   std::string read;
+  std::getline(stream,line);
+  std::stringstream s(line);
+  while (s>>read)
+    stat.push_back(read);
     return to_string(float(stof(stat[13])/sysconf(_SC_CLK_TCK)));
  }
  /******************************************************************* */
@@ -297,6 +307,7 @@ float ProcessParser::getSysRamPercent()
         {
             stringstream s(line);
             s>>param>>value;
+            
             total_mem = stof(value);
         }
         if (line.compare(0, name2.size(), name2) == 0) {
@@ -327,7 +338,7 @@ string ProcessParser::getSysKernelVersion()
     string value;
     while (std::getline(stream, line)) {
         if (line.compare(0, name.size(),name) == 0) {
-          string stream s(line);
+          stringstream s(line);
           s>>value>>value>>value;
           return value;
         }
@@ -340,9 +351,10 @@ Implementation of getOsName function
 Argumnets: None
 Return: OS name as string
  */
-string ProcessParser::getOsName()
+string ProcessParser::getOSName()
 {
     string line;
+
     string name = "PRETTY_NAME=";
 
     ifstream stream = Util::getStream(("/etc/os-release"));
@@ -364,7 +376,7 @@ string ProcessParser::getOsName()
 Implementation of getTotalThreads
 Arguments: None
 Return: total number of processes threads as integer
- */
+*/
 int ProcessParser::getTotalThreads()
 {
     string line;
@@ -384,7 +396,9 @@ int ProcessParser::getTotalThreads()
             break;
         }
     }
-    return result;
+    
+  }
+  return result;
 }
 /***************************************************************** */
 /*
@@ -392,22 +406,24 @@ Implementation of getTotalNumberOfProcesses function
 Arguments: None
 Return: Total numner of processes as integer
  */
-int ProcessParser::getTotalNumberOfProcesses()
+int ProcessParser::getTotalNumberOfProcesses ()
 {
     string line;
     int result = 0;
     string name = "processes";
     string value;
     ifstream stream = Util::getStream((Path::basePath() + Path::statPath()));
-    while (std::getline(stream, line)) {
-        if (line.compare(0, name.size(), name) == 0) {
+    while (std::getline(stream, line))
+     {
+        if (line.compare(0, name.size(), name) == 0) 
+        {
             stringstream s(line);
             s>>value>>value;
             result += stoi(value);
             break;
         }
-    }
-    return result;
+     }
+    return result;  
 }
 /******************************************************************* */
 /*
@@ -418,6 +434,7 @@ Return: Total numner o running processes as integer
 int ProcessParser::getNumberOfRunningProcesses()
 {
     string line;
+    string value;
     int result = 0;
     string name = "procs_running";
     ifstream stream = Util::getStream((Path::basePath() + Path::statPath()));
@@ -454,4 +471,36 @@ int ProcessParser::getNumberOfCores()
         }
     }
     return 0;
+}
+/***************************************************************** */
+/*
+
+ */
+std::string ProcessParser::PrintCpuStats(vector<string> values1, vector<string> values2)
+{
+/*
+Because CPU stats can be calculated only if you take measures in two different time,
+this function has two parameters: two vectors of relevant values.
+We use a formula to calculate overall activity of processor.
+*/
+    float activeTime = get_sys_active_cpu_time(values2) - get_sys_active_cpu_time(values1);
+    float idleTime = get_sys_idle_cpu_time(values2) - get_sys_idle_cpu_time(values1);
+    float totalTime = activeTime + idleTime;
+    float result = 100.0*(activeTime / totalTime);
+    return to_string(result);
+}
+/**************************************************************** */
+/*
+Implementation of isPidExisting function
+Arguments: process PID
+Retirn: flag, True if PID exists and false if not 
+ */
+bool ProcessParser::isPidExisting(string pid)
+{
+  vector<string> PIDs = ProcessParser:: getPidList();
+  std::vector<string>::iterator it = std::find(PIDs.begin(), PIDs.end(), pid);
+if (it != PIDs.end())
+return true;
+else
+return false;
 }
