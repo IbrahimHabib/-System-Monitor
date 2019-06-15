@@ -431,3 +431,27 @@ int ProcessParser::getNumberOfRunningProcesses()
     }
     return result;
 }
+/******************************************************************* */
+/*
+Imnplementation of getNumberOfCores
+Arguments: None
+Return: Number of cpu cores
+ */
+int ProcessParser::getNumberOfCores()
+{
+    // Get the number of host cpu cores
+    string line;
+    string value;
+    string name = "cpu cores";
+    ifstream stream = Util::getStream((Path::basePath() + "cpuinfo"));
+    while (std::getline(stream, line)) {
+        if (line.compare(0, name.size(),name) == 0) {
+            vector<string> values;
+            stringstream s(line);
+            while(s>>value)
+            values.push_back(value);
+            return stoi(values[3]);
+        }
+    }
+    return 0;
+}
