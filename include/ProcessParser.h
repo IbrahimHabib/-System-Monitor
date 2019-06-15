@@ -229,3 +229,55 @@ string ProcessParser::getProcUser(string pid)
     }
     return "";
 }
+/******************************************************************** */
+/*
+Implementation of getSysCpuPercent function
+Arguments: Core Number as a string
+Returm vector of all core data
+ */
+vector<string> ProcessParser::getSysCpuPercent(string coreNumber)
+{
+   // reading data for each core, by passing the core number the corresponding data of this core is returned 
+    string line;
+    string read;
+    string name = "cpu" + coreNumber;
+    vector<string> values;
+    ifstream stream = Util::getStream((Path::basePath() + Path::statPath()));
+    while (std::getline(stream, line))
+    {
+     if (line.compare(0, name.size(),name) == 0) 
+     {
+     stringstream s(line);
+     while (s>>read)
+     values.push_back(read);
+     return values;
+     }
+    } 
+  return (vector<string>());
+}
+/*
+get_active_Cpu_time; this function uses the data comming from getSysCpuPercent fumction adn calculate active cpu time
+Arguments: vector of data comming from getSysCpuPercent for a specific core bumber
+Return: Active cpu time as a float
+*/
+float get_sys_active_cpu_time(vector<string> values)
+{
+    return (stof(values[S_USER]) +
+            stof(values[S_NICE]) +
+            stof(values[S_SYSTEM]) +
+            stof(values[S_IRQ]) +
+            stof(values[S_SOFTIRQ]) +
+            stof(values[S_STEAL]) +
+            stof(values[S_GUEST]) +
+            stof(values[S_GUEST_NICE]));
+}
+/*
+ get_sys_idle_cpu_time; this function uses the data comming from getSysCpuPercent fumction adn calculate idle cpu time
+ Arguments: vector of data comming from getSysCpuPercent for a specific core bumber
+Return: Idle cpu time as a float
+ */
+float get_sys_idle_cpu_time(vector<string>values)
+{
+    return (stof(values[S_IDLE]) + stof(values[S_IOWAIT]));
+}
+
